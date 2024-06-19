@@ -17,7 +17,8 @@ def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_d
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     loss_accumulator = defaultdict(list)
     for epoch in range(epochs):
-        for batch in tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}'):
+        p_bar = tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}')
+        for batch in p_bar:
             token_ids, corrected_ids, py_token_ids, correct_mask, attn_mask = (item.to(device) for item in batch)
 
             optimizer.zero_grad()
@@ -28,6 +29,9 @@ def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_d
             loss_accumulator['loss'].append(loss.item())
             loss_accumulator['detector_loss'].append(output['detector_loss'].item())
             loss_accumulator['corrector_loss'].append(output['corrector_loss'].item())
+            p_bar.set_postfix(detector_loss=np.mean(loss_accumulator['detector_loss']),
+                              corrector_loss=np.mean(loss_accumulator['corrector_loss']),
+                              total_loss=np.mean(loss_accumulator['loss']))
         if epoch % save_every == 0:
             filename = os.path.join(save_dir, f"{epoch}.pth")
             torch.save(model.state_dict(), filename)
@@ -45,7 +49,6 @@ def parse_arguments():
     parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--num_workers', type=int, default=14)
     parser.add_argument('--lr', type=float, default=1e-5)
-    parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save_every', type=int, default=1)
     parser.add_argument('--log_path', type=str, default='output/log/log.txt')
@@ -61,7 +64,7 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(args.resume, map_location=args.device))
     dataset = make_dataset(**load_yaml(args.data_config))
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
     train(model,
           optimizer,

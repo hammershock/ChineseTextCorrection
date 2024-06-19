@@ -15,7 +15,7 @@ def parse_arguments():
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--text', type=str, default='好我们来看这一句美人一小快递')
     parser.add_argument('--pinyin_vocab_path', type=str, default='pinyin_vocab.json')
-    parser.add_argument('--model_path', type=str, default="./output/ckpt/0.pth")
+    parser.add_argument('--model_path', type=str, default="./output/ckpt/0(1).pth")
     return parser.parse_args()
 
 
@@ -24,7 +24,8 @@ if __name__ == '__main__':
     config = load_yaml(args.model_config)
     model = TextCorrector(**config).to(args.device)
     model.eval()
-    model.load_state_dict(torch.load(args.model_path, map_location=args.device))
+    # model.load_state_dict(torch.load(args.model_path, map_location=args.device))
+    model.detector.load_state_dict(torch.load("output/ckpt/detector/4.pth"))
     tokenizer = BertTokenizer.from_pretrained(config["pretrained_model_name_or_path"])
     result = tokenizer(args.text, return_tensors="pt")
     tokens, py_tokens = pinyin_tokenize(args.text, tokenizer)

@@ -40,6 +40,7 @@ class Corrector(nn.Module):
         super(Corrector, self).__init__()
         self.bert_mlm = BertForMaskedLM.from_pretrained(pretrained_model_name_or_path)  # 预训练MLM
         self.pinyin_embedding = nn.Embedding(num_pinyins, self.bert_mlm.bert.config.hidden_size)
+        self.pinyin_embedding.weight.data.fill_(0)
         self.mask_embed = nn.Parameter(self.bert_mlm.bert.embeddings.word_embeddings.weight[mask_token_id].clone())
         self.loss_fn = nn.CrossEntropyLoss()
 
@@ -53,7 +54,7 @@ class Corrector(nn.Module):
         fused_embed = input_ids_embed * (1 - err_probs).unsqueeze(-1) + mask_embed_expanded * err_probs.unsqueeze(-1)
 
         # Use BERT model with combined embeddings
-        outputs = self.bert_mlm(inputs_embeds=fused_embed + pinyin_embed, attention_mask=attention_mask)
+        outputs = self.bert_mlm(inputs_embeds=fused_embed + 5 * pinyin_embed, attention_mask=attention_mask)
         logits = outputs.logits  # (batch_size, seq_len, vocab_size)
 
         if target_ids is not None:
