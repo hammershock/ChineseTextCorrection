@@ -33,34 +33,44 @@ class Detector(nn.Module):
         return probabilities
 
 
+import torch
+import torch.nn as nn
+from transformers import BertForMaskedLM
+
 class Corrector(nn.Module):
     """MLM纠错网络"""
 
     def __init__(self, pretrained_model_name_or_path, num_pinyins, mask_token_id):
         super(Corrector, self).__init__()
         self.bert_mlm = BertForMaskedLM.from_pretrained(pretrained_model_name_or_path)  # 预训练MLM
-        self.pinyin_embedding = nn.Embedding(num_pinyins, self.bert_mlm.bert.config.hidden_size)
-        self.pinyin_embedding.weight.data.fill_(0)
+        self.pinyin_embedding = nn.Embedding(num_pinyins, self.bert_mlm.config.hidden_size)
+        self.pinyin_embedding.weight.data.fill_(0)  # 初始化拼音嵌入层为0
         self.mask_embed = nn.Parameter(self.bert_mlm.bert.embeddings.word_embeddings.weight[mask_token_id].clone())
         self.loss_fn = nn.CrossEntropyLoss()
 
     def forward(self, input_ids, attention_mask, err_probs, pinyin_ids, target_ids=None):
-        # Extra pinyin embeddings
+        # 获取拼音嵌入
         pinyin_embed = self.pinyin_embedding(pinyin_ids)  # (batch_size, seq_len, hidden_size)
 
-        # Get the BERT embeddings for input_ids
+        # 获取BERT的输入嵌入
         input_ids_embed = self.bert_mlm.bert.embeddings.word_embeddings(input_ids)
         mask_embed_expanded = self.mask_embed.unsqueeze(0).unsqueeze(0).expand_as(input_ids_embed)
         fused_embed = input_ids_embed * (1 - err_probs).unsqueeze(-1) + mask_embed_expanded * err_probs.unsqueeze(-1)
 
-        # Use BERT model with combined embeddings
-        outputs = self.bert_mlm(inputs_embeds=fused_embed + 5 * pinyin_embed, attention_mask=attention_mask)
-        logits = outputs.logits  # (batch_size, seq_len, vocab_size)
+        # 使用BERT模型进行前向传播
+        outputs = self.bert_mlm.bert(inputs_embeds=fused_embed + pinyin_embed, attention_mask=attention_mask, output_hidden_states=True)
+        hidden_states = outputs.hidden_states  # 获取所有隐藏状态
+
+        # 将所有隐藏状态与输入嵌入相加进行残差连接
+        combined_hidden_states = hidden_states[-1]  # 使用最后一层的隐藏状态
+        residual_embed = fused_embed + combined_hidden_states
+
+        # 将残差连接后的结果输入到分类器中
+        logits = self.bert_mlm.cls(residual_embed)  # (batch_size, seq_len, vocab_size)
 
         if target_ids is not None:
             loss = self.loss_fn(logits.view(-1, logits.size(-1)), target_ids.view(-1))
             return {'loss': loss, 'logits': logits}
-        return logits
 
 
 def mixed_loss(*losses, mask=None) -> torch.Tensor:
