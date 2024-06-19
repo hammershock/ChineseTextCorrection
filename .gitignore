@@ -6,3 +6,4 @@
 __pycache__
 *.zip
 /mlm_test.py
+/output/

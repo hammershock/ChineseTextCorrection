@@ -50,10 +50,10 @@ class Corrector(nn.Module):
         # Get the BERT embeddings for input_ids
         input_ids_embed = self.bert_mlm.bert.embeddings.word_embeddings(input_ids)
         mask_embed_expanded = self.mask_embed.unsqueeze(0).unsqueeze(0).expand_as(input_ids_embed)
-        input_ids_embed = input_ids_embed * (1 - err_probs).unsqueeze(-1) + mask_embed_expanded * err_probs.unsqueeze(-1)
+        fused_embed = input_ids_embed * (1 - err_probs).unsqueeze(-1) + mask_embed_expanded * err_probs.unsqueeze(-1)
 
         # Use BERT model with combined embeddings
-        outputs = self.bert_mlm(inputs_embeds=input_ids_embed + pinyin_embed, attention_mask=attention_mask)
+        outputs = self.bert_mlm(inputs_embeds=fused_embed + pinyin_embed, attention_mask=attention_mask)
         logits = outputs.logits  # (batch_size, seq_len, vocab_size)
 
         if target_ids is not None:
@@ -84,4 +84,4 @@ class TextCorrector(nn.Module):
 
         err_probs = self.detector.forward(input_ids, attention_mask)
         logits = self.corrector.forward(input_ids, attention_mask, err_probs, pinyin_ids)
-        return logits
+        return {'logits': logits, 'err_probs': err_probs}

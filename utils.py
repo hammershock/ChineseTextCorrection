@@ -54,6 +54,11 @@ def load_json(path):
         return json.load(f)
 
 
+def load_txt(path):
+    with open(path, 'r') as f:
+        return f.readlines()
+
+
 if __name__ == '__main__':
     # 测试函数
     sequences = [

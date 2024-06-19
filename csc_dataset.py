@@ -10,8 +10,7 @@ from joblib import Memory
 from tqdm import tqdm
 from transformers import BertTokenizer
 
-from utils import batchify
-
+from utils import batchify, load_json
 
 memory = Memory(location="./cache", verbose=0)
 
@@ -88,8 +87,7 @@ def _make_dataset(original_lines, correct_lines, tokenizer, pinyin_vocab, max_le
 @memory.cache
 def make_dataset(data_path, tokenizer_path, pinyin_vocab_path, **kwargs):
     tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
-    with open(pinyin_vocab_path, "r", encoding="utf-8") as f:
-        pinyin_vocab = json.load(f)
+    pinyin_vocab = load_json(pinyin_vocab_path)
     with open(data_path, "r", encoding="utf-8") as f:
         parts = [line.strip().split("\t") for line in f.readlines()]
         original, corrected = zip(*parts)
