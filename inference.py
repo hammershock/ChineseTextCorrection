@@ -1,5 +1,6 @@
 import argparse
 
+from model import TextCorrector
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -13,3 +14,4 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
+    model = TextCorrector(**)

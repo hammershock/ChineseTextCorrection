@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 from typing import Sequence, TypeVar, Iterator, Tuple, List, Union
 
+import yaml
+
 _T = TypeVar("_T")
 
 
@@ -39,6 +41,11 @@ def batchify(*sequences: Sequence[_T], max_len: int, overlap: int, pad: Union[Li
             pad_mask = [1 if i >= len(segmented_seqs[0]) else 0 for i in range(max_len)]
 
         yield tuple(padded_seqs), pad_mask
+
+
+def load_yaml(path):
+    with open(path, 'r') as f:
+        return yaml.safe_load(f)
 
 
 if __name__ == '__main__':

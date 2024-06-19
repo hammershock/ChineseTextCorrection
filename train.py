@@ -1,25 +1,21 @@
 import argparse
 import os
+from collections import defaultdict
 
 import numpy as np
 import torch
-import yaml
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from model import TextCorrector
 from csc_dataset import make_dataset
-
-
-def load_yaml(path):
-    with open(path, 'r') as f:
-        return yaml.safe_load(f)
+from utils import load_yaml
 
 
 def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_dir, log_path, save_every=1):
     os.makedirs(save_dir, exist_ok=True)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    loss_accumulator = []
+    loss_accumulator = defaultdict(list)
     for epoch in range(epochs):
         for batch in tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}'):
             token_ids, corrected_ids, py_token_ids, correct_mask, attn_mask = (item.to(device) for item in batch)
@@ -29,12 +25,15 @@ def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_d
             loss = output['loss']
             loss.backward()
             optimizer.step()
-            loss_accumulator.append(loss.item())
+            loss_accumulator['loss'].append(loss.item())
+            loss_accumulator['detector_loss'].append(output['detector_loss'].item())
+            loss_accumulator['corrector_loss'].append(output['corrector_loss'].item())
         if epoch % save_every == 0:
             filename = os.path.join(save_dir, f"{epoch}.pth")
             torch.save(model.state_dict(), filename)
             with open(log_path, 'a') as f:
-                f.write(f'{epoch}\t{np.mean(loss_accumulator)}\n')
+                losses = "\t".join(f'k={np.mean(v)}' for k, v in loss_accumulator.items())
+                f.write(f'{epoch}\t{losses}\n')
                 f.flush()
 
 
@@ -57,7 +56,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    model = TextCorrector(**load_yaml(args.model_config)['corrector']).to(args.device)
+    model = TextCorrector(**load_yaml(args.model_config)).to(args.device)
     if args.resume:
         model.load_state_dict(torch.load(args.resume, map_location=args.device))
     dataset = make_dataset(**load_yaml(args.data_config))
