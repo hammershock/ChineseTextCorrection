@@ -22,9 +22,13 @@ def train(model, optimizer, dataloader, *, device, epochs, save_dir, log_path, s
     loss_accumulator = []
     for epoch in range(epochs):
         for batch in tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}'):
-            batch = tuple(item.to(device) for item in batch)
+            token_ids, _, _, correct_mask, attn_mask = batch
+            token_ids = token_ids.to(device)
+            attn_mask = attn_mask.to(device)
+            correct_mask = correct_mask.to(device)
+
             optimizer.zero_grad()
-            output = model(*batch)
+            output = model(token_ids, attention_mask=attn_mask, labels=correct_mask)
             loss = output['loss']
             loss.backward()
             optimizer.step()
