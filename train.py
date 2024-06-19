@@ -25,6 +25,7 @@ def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_d
             output = model.forward(token_ids, attention_mask=attn_mask, pinyin_ids=py_token_ids, target_ids=corrected_ids, labels=correct_mask)
             loss = output['loss']
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             loss_accumulator['loss'].append(loss.item())
             loss_accumulator['detector_loss'].append(output['detector_loss'].item())
