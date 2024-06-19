@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterable
 from typing import Sequence, TypeVar, Iterator, Tuple, List, Union
 
@@ -46,6 +47,11 @@ def batchify(*sequences: Sequence[_T], max_len: int, overlap: int, pad: Union[Li
 def load_yaml(path):
     with open(path, 'r') as f:
         return yaml.safe_load(f)
+
+
+def load_json(path):
+    with open(path, 'r') as f:
+        return json.load(f)
 
 
 if __name__ == '__main__':

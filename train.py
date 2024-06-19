@@ -32,7 +32,7 @@ def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_d
             filename = os.path.join(save_dir, f"{epoch}.pth")
             torch.save(model.state_dict(), filename)
             with open(log_path, 'a') as f:
-                losses = "\t".join(f'k={np.mean(v)}' for k, v in loss_accumulator.items())
+                losses = "\t".join(f'{k}={np.mean(v)}' for k, v in loss_accumulator.items())
                 f.write(f'{epoch}\t{losses}\n')
                 f.flush()
 
