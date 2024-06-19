@@ -7,7 +7,7 @@ import yaml
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from model import Detector
+from model import Corrector
 from csc_dataset import make_dataset
 
 
@@ -16,19 +16,16 @@ def load_yaml(path):
         return yaml.safe_load(f)
 
 
-def train(model, optimizer, dataloader, *, device, epochs, save_dir, log_path, save_every=1):
+def train(model: Corrector, optimizer, dataloader, *, device, epochs, save_dir, log_path, save_every=1):
     os.makedirs(save_dir, exist_ok=True)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     loss_accumulator = []
     for epoch in range(epochs):
         for batch in tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}'):
-            token_ids, _, _, correct_mask, attn_mask = batch
-            token_ids = token_ids.to(device)
-            attn_mask = attn_mask.to(device)
-            correct_mask = correct_mask.to(device)
+            token_ids, corrected_ids, py_token_ids, correct_mask, attn_mask = (item.to(device) for item in batch)
 
             optimizer.zero_grad()
-            output = model(token_ids, attention_mask=attn_mask, labels=correct_mask)
+            output = model.forward(token_ids, attention_mask=attn_mask, err_probs=correct_mask, pinyin_ids=py_token_ids, target_ids=corrected_ids)
             loss = output['loss']
             loss.backward()
             optimizer.step()
@@ -52,15 +49,15 @@ def parse_arguments():
     parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save_every', type=int, default=1)
-    parser.add_argument('--log_path', type=str, default='output/log/detector.txt')
-    parser.add_argument('--save_dir', type=str, default='output/ckpt/detector')
+    parser.add_argument('--log_path', type=str, default='output/log/corrector.txt')
+    parser.add_argument('--save_dir', type=str, default='output/ckpt/corrector')
     parser.add_argument('--resume', type=str, default=None)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_arguments()
-    model = Detector(**load_yaml(args.model_config)['detector']).to(args.device)
+    model = Corrector(**load_yaml(args.model_config)['corrector']).to(args.device)
     if args.resume:
         model.load_state_dict(torch.load(args.resume, map_location=args.device))
     dataset = make_dataset(**load_yaml(args.data_config))
@@ -75,4 +72,3 @@ if __name__ == '__main__':
           save_dir=args.save_dir,
           log_path=args.log_path,
           save_every=args.save_every)
-

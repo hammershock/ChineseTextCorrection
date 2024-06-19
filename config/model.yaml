@@ -1,2 +1,6 @@
 detector:
   pretrained_model_name_or_path: "./bert-base-chinese"
+corrector:
+  pretrained_model_name_or_path: "./bert-base-chinese"
+  num_pinyins: 414
+  mask_token_id: 103
