@@ -60,3 +60,28 @@ class Corrector(nn.Module):
             loss = self.loss_fn(logits.view(-1, logits.size(-1)), target_ids.view(-1))
             return {'loss': loss, 'logits': logits}
         return logits
+
+
+def mixed_loss(*losses, mask=None) -> torch.Tensor:
+    if mask is None:
+        mask = [True] * len(losses)
+    losses_weighted = [(1.0 / torch.sqrt(loss + 1e-8)) * loss for loss, m in zip(losses, mask) if m]
+    return sum(losses_weighted)
+
+
+class TextCorrector(nn.Module):
+    def __init__(self, pretrained_model_name_or_path, num_pinyins, mask_token_id):
+        super(TextCorrector, self).__init__()
+        self.detector = Detector(pretrained_model_name_or_path)
+        self.corrector = Corrector(pretrained_model_name_or_path, num_pinyins, mask_token_id)
+
+    def forward(self, input_ids, attention_mask, pinyin_ids, target_ids=None, labels=None):
+        if labels is not None and target_ids is not None:
+            detector_loss = self.detector.forward(input_ids, attention_mask, labels)['loss']
+            corrector_loss = self.corrector.forward(input_ids, attention_mask, labels, pinyin_ids, target_ids)['loss']
+            total_loss = mixed_loss(detector_loss, corrector_loss)
+            return {'detector_loss': detector_loss, 'corrector_loss': corrector_loss, 'loss': total_loss}
+
+        err_probs = self.detector.forward(input_ids, attention_mask)
+        logits = self.corrector.forward(input_ids, attention_mask, err_probs, pinyin_ids)
+        return logits

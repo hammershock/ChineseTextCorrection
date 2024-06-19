@@ -48,7 +48,7 @@ def parse_arguments():
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--num_workers', type=int, default=14)
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--lr', type=float, default=1e-5)
     parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save_every', type=int, default=1)
