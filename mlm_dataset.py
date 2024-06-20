@@ -83,5 +83,5 @@ class MLMDataset(Dataset):
     def __getitem__(self, idx):
         data = {'input_ids': self.token_ids[idx],
                 'attention_mask': self.attn_mask[idx],
-                'special_token_ids': self.batched_special_token_ids[idx]}
+                'special_tokens_mask': self.batched_special_token_ids[idx]}
         return data

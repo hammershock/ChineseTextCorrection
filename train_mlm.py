@@ -40,9 +40,9 @@ def train(model, optimizer, dataloader, *, device, epochs, save_dir, log_path, s
     for epoch in range(epochs):
         p_bar = tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}')
         for batch in p_bar:
-            input_ids = batch['input_ids'].to(args.device)
-            attention_mask = batch['attention_mask'].to(args.device)
-            labels = batch['labels'].to(args.device)
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
 
             optimizer.zero_grad()
             outputs = model(input_ids, labels=labels, attention_mask=attention_mask)

@@ -48,7 +48,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_config', type=str, default='./config/data.yaml')
     parser.add_argument('--model_config', type=str, default='./config/model.yaml')
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=280)
     parser.add_argument('--num_workers', type=int, default=14)
     parser.add_argument('--lr', type=float, default=1e-5)
