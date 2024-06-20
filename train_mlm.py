@@ -1,6 +1,10 @@
 import argparse
+import os
+from collections import defaultdict
 
+import numpy as np
 import torch
+from tqdm import tqdm
 from transformers import BertTokenizer, BertForMaskedLM, AdamW, get_linear_schedule_with_warmup, \
     DataCollatorForLanguageModeling, BertConfig
 from torch.utils.data import DataLoader
@@ -26,6 +30,40 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def train(model, optimizer, dataloader, *, device, epochs, save_dir, log_path, save_every=1):
+    model.train()
+    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    loss_accumulator = defaultdict(list)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=len(data_loader) * args.epochs)
+
+    for epoch in range(epochs):
+        p_bar = tqdm(dataloader, f'Train Epoch {epoch + 1}/{epochs}')
+        for batch in p_bar:
+            input_ids = batch['input_ids'].to(args.device)
+            attention_mask = batch['attention_mask'].to(args.device)
+            labels = batch['labels'].to(args.device)
+
+            optimizer.zero_grad()
+            outputs = model(input_ids, labels=labels, attention_mask=attention_mask)
+
+            loss = outputs['loss']
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+            scheduler.step()
+            loss_accumulator['loss'].append(loss.item())
+            p_bar.set_postfix(total_loss=np.mean(loss_accumulator['loss']))
+        if epoch % save_every == 0:
+            # filename = os.path.join(save_dir, f"{epoch}.pth")
+            model.save_pretrained(args.save_dir)
+            tokenizer.save_pretrained(args.save_dir)
+            with open(log_path, 'a') as f:
+                losses = "\t".join(f'{k}={np.mean(v)}' for k, v in loss_accumulator.items())
+                f.write(f'{epoch}\t{losses}\n')
+                f.flush()
+
+
 if __name__ == '__main__':
     args = parse_arguments()
     model_name = load_yaml(args.model_config)["pretrained_model_name_or_path"]
@@ -45,24 +83,10 @@ if __name__ == '__main__':
 
     optimizer = AdamW(model.parameters(), lr=args.lr)
 
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=len(data_loader) * args.epochs)
+    train(model, optimizer, data_loader,
+          device=args.device,
+          epochs=args.epochs,
+          save_dir=args.save_dir,
+          log_path=args.log_path,
+          save_every=args.save_every)
 
-    model.train()
-    for epoch in range(args.epochs):
-        for batch in data_loader:
-            input_ids = batch['input_ids'].to(args.device)
-            attention_mask = batch['attention_mask'].to(args.device)
-            labels = batch['labels'].to(args.device)
-
-            outputs = model(input_ids, labels=labels)
-            loss = outputs.loss
-
-            loss.backward()
-            optimizer.step()
-            scheduler.step()
-            optimizer.zero_grad()
-
-            print(f"Epoch: {epoch}, Loss: {loss.item()}")
-
-    model.save_pretrained(args.save_dir)
-    tokenizer.save_pretrained(args.save_dir)
