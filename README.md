@@ -27,7 +27,9 @@ pip install torch transformers tqdm numpy pypinyin pyyaml joblib
 ## 使用方法
 
 ### 训练模型
-训练模型需要数据文件，格式为tsv，第一列原始文本，第二列为纠正错误后的文本。这里提供了数据文件示例，请将`data.rar`解压缩到项目目录下。
+- 训练模型需要数据文件，格式为tsv，第一列原始文本，第二列为纠正错误后的文本。这里提供了数据文件示例，请将`data.rar`解压缩到项目目录下。
+- 需要从huggingface下载`bert-base-chinese`[预训练模型](https://huggingface.co/google-bert/bert-base-chinese)以及分词器,到`./bert-base-chinese`目录下。
+
 ```bash
 python train.py --data_config ./config/data.yaml --model_config ./config/model.yaml --epochs 10 --batch_size 290
 ```
