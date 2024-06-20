@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from collections import defaultdict
 
 import numpy as np
@@ -13,6 +14,7 @@ from utils import load_yaml
 
 
 def train(model: TextCorrector, optimizer, dataloader, *, device, epochs, save_dir, log_path, save_every=1):
+    model.train()
     os.makedirs(save_dir, exist_ok=True)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     loss_accumulator = defaultdict(list)
@@ -47,7 +49,7 @@ def parse_arguments():
     parser.add_argument('--data_config', type=str, default='./config/data.yaml')
     parser.add_argument('--model_config', type=str, default='./config/model.yaml')
     parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=290)
+    parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--num_workers', type=int, default=14)
     parser.add_argument('--lr', type=float, default=1e-5)
     parser.add_argument('--device', type=str, default='cuda')

@@ -37,9 +37,9 @@ def batchify(*sequences: Sequence[_T], max_len: int, overlap: int, pad: Union[Li
                 padded_seq = list(seq)
             padded_seqs.append(padded_seq)
 
-        pad_mask = [0] * max_len
+        pad_mask = [1] * max_len
         if len(segmented_seqs[0]) < max_len:
-            pad_mask = [1 if i >= len(segmented_seqs[0]) else 0 for i in range(max_len)]
+            pad_mask = [0 if i >= len(segmented_seqs[0]) else 1 for i in range(max_len)]
 
         yield tuple(padded_seqs), pad_mask
 

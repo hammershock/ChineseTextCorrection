@@ -113,3 +113,9 @@ def make_dataset(data_path, tokenizer_path, pinyin_vocab_path, **kwargs):
         parts = [line.strip().split("\t") for line in f.readlines()]
         original, corrected = zip(*parts)
     return _make_dataset(original, corrected, tokenizer, pinyin_vocab, **kwargs)
+
+
+if __name__ == "__main__":
+    tokenizer = BertTokenizer.from_pretrained("./bert-base-chinese")
+    outputs = tokenizer("你好牙", return_tensors='pt')
+    print(outputs)
