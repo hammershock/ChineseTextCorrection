@@ -27,14 +27,13 @@ pip install torch transformers tqdm numpy pypinyin pyyaml joblib
 ## 使用方法
 
 ### 训练模型
-训练模型需要数据文件，格式为tsv，第一列原始文本，第二列为纠正错误后的文本
-
+训练模型需要数据文件，格式为tsv，第一列原始文本，第二列为纠正错误后的文本。这里提供了数据文件示例，请将`data.rar`解压缩到项目目录下。
 ```bash
 python train.py --data_config ./config/data.yaml --model_config ./config/model.yaml --epochs 10 --batch_size 290
 ```
 
-- `--data_config`: 数据配置文件路径，默认为 `./config/data.yaml`。
-- `--model_config`: 模型配置文件路径，默认为 `./config/model.yaml`。
+- `--data_config`: [数据配置文件路径](./config/data.yaml)，默认为 `./config/data.yaml`。
+- `--model_config`: [模型配置文件路径](./config/model.yaml)，默认为 `./config/model.yaml`。
 - `--epochs`: 训练的轮数，默认为 10。
 - `--batch_size`: 每批次的样本数量，默认为 290。
 - `--num_workers`: 数据加载时使用的线程数，默认为 14。
