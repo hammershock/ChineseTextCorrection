@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from model import TextCorrector
-from csc_dataset import make_dataset
+from ctc_dataset import make_dataset
 from utils import load_yaml
 
 
@@ -47,7 +47,7 @@ def parse_arguments():
     parser.add_argument('--data_config', type=str, default='./config/data.yaml')
     parser.add_argument('--model_config', type=str, default='./config/model.yaml')
     parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=290)
     parser.add_argument('--num_workers', type=int, default=14)
     parser.add_argument('--lr', type=float, default=1e-5)
     parser.add_argument('--device', type=str, default='cuda')
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     model = TextCorrector(**load_yaml(args.model_config)).to(args.device)
     if args.resume:
         model.load_state_dict(torch.load(args.resume, map_location=args.device))
-    dataset = make_dataset(**load_yaml(args.data_config))
+    dataset = make_dataset(**load_yaml(args.data_config)['train'])
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 

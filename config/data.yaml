@@ -1,5 +1,12 @@
-data_path: "./data/diff.tsv"
-tokenizer_path: "./bert-base-chinese"
-pinyin_vocab_path: "./pinyin_vocab.json"
-max_len: 128
-overlap: 64
+train:
+  data_path: "./data/diff.tsv"
+  tokenizer_path: "./bert-base-chinese"
+  pinyin_vocab_path: "./pinyin_vocab.json"
+  max_len: 128
+  overlap: 64
+val:
+  data_path: "./data/diff_val.tsv"
+  tokenizer_path: "./bert-base-chinese"
+  pinyin_vocab_path: "./pinyin_vocab.json"
+  max_len: 128
+  overlap: 64
