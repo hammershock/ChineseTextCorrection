@@ -13,12 +13,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_config', type=str, default='./config/data.yaml')
     parser.add_argument('--model_config', type=str, default='./config/model.yaml')
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=280)
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--num_workers', type=int, default=14)
     parser.add_argument('--lr', type=float, default=5e-5)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save_every', type=int, default=1)
+    parser.add_argument('-p', '--mlm_prob', type=float, default=0.15, help='Masked language modeling probability')
     parser.add_argument('--log_path', type=str, default='output/log/log_pretrained_mlm.txt')
     parser.add_argument('--save_dir', type=str, default='output/ckpt/pretrained_mlm')
     parser.add_argument('--resume', type=str, default=None)
@@ -30,24 +31,6 @@ if __name__ == '__main__':
     model_name = load_yaml(args.model_config)["pretrained_model_name_or_path"]
 
     model = BertForMaskedLM.from_pretrained(model_name).to(args.device)
-    # config = BertConfig.from_pretrained(model_name)
-    #
-    # new_max_position_embeddings = 2048
-    # config.max_position_embeddings = new_max_position_embeddings
-    #
-    # old_position_embeddings = model.bert.embeddings.position_embeddings.weight.data
-    # old_max_position_embeddings, hidden_size = old_position_embeddings.size()
-    #
-    # new_position_embeddings = torch.nn.functional.interpolate(
-    #     old_position_embeddings.unsqueeze(0).permute(0, 2, 1),
-    #     size=new_max_position_embeddings,
-    #     mode='linear'
-    # ).squeeze(0).permute(1, 0)
-    #
-    # model.bert.embeddings.position_embeddings = torch.nn.Embedding(new_max_position_embeddings, hidden_size)
-    # model.bert.embeddings.position_embeddings.weight.data = new_position_embeddings
-    #
-    # model = BertForMaskedLM.from_pretrained(model_name).to(args.device)
     tokenizer = BertTokenizer.from_pretrained(model_name)
 
     dataset = MLMDataset(**load_yaml(args.data_config)['train'])
@@ -55,7 +38,7 @@ if __name__ == '__main__':
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         mlm=True,
-        mlm_probability=0.15
+        mlm_probability=args.mlm_prob,
     )
 
     data_loader = DataLoader(dataset, batch_size=args.batch_size, collate_fn=data_collator)
