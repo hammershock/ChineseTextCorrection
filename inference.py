@@ -32,7 +32,6 @@ if __name__ == '__main__':
     pinyin_vocab = load_json(args.pinyin_vocab_path)
     py_token_ids = [pinyin_vocab[item] for item in py_tokens]
     with torch.no_grad():
-        print(result['input_ids'])
         output = model.forward(result['input_ids'].to(args.device),
                                result['attention_mask'].to(args.device),
                                torch.LongTensor(py_token_ids).to(args.device).unsqueeze(0))
