@@ -37,8 +37,7 @@ if __name__ == '__main__':
                                torch.LongTensor(py_token_ids).to(args.device).unsqueeze(0))
         logits = output['logits']
     preds = torch.argmax(logits, dim=-1)[0]
-    line = tokenizer.decode(preds.cpu().numpy())
+    line = tokenizer.decode(preds.cpu().numpy()[1:-1])
 
     print(output['err_probs'].cpu().numpy()[0])
-    print(line[1:-1])  # 这 个 光 棱 坦 克 射 程 比 较 长
-
+    print(line)  # 这 个 光 棱 坦 克 射 程 比 较 长

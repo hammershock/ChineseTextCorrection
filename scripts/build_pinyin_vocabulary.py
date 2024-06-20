@@ -1,6 +1,6 @@
 """
 build pinyin vocab
-获取拼音词汇表
+获取拼音词汇表，生成文件`../pinyin_vocabulary.json`
 """
 import json
 
