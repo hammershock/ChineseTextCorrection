@@ -49,7 +49,7 @@ python train.py --data_config ./config/data.yaml --model_config ./config/model.y
 ### 模型推理
 
 ```bash
-python inference.py --text "这个光灵坦克射程比较长" --model_path "./output/ckpt/0.pth" --pinyin_vocab_path "pinyin_vocab.json"
+python inference.py --text "这个光灵坦克射程比较长" --model_path "./output/ckpt/6.pth" --pinyin_vocab_path "./config/pinyin_vocab.json"
 ```
 
 - `--data_config`: 数据配置文件路径，默认为 `./config/data.yaml`。
@@ -61,11 +61,11 @@ python inference.py --text "这个光灵坦克射程比较长" --model_path "./o
 
 此命令将输出纠正后的文本以及每个字符的错误概率。
 ```text
-[0.16167694 0.18457742 0.11173134 0.1624171  0.26110426 0.17090733
- 0.22880052 0.21512051 0.26683483 0.07345239 0.11701562 0.1284751
- 0.08035028]
- 这 个 光 棱 坦 克 射 程 比 较 长 
+[[3.7584048e-02 1.5753442e-02 2.8908988e-03 4.8353239e-03 9.9957341e-01
+  1.6121952e-01 6.0316704e-02 3.2436023e-03 9.4425835e-04 7.7465473e-04
+  9.1162999e-04 1.7803793e-03 3.7583515e-02]]
 
+[CLS] 这 个 光 棱 坦 克 射 程 比 较 长 [SEP]
 ```
 
 ## 参考文献
