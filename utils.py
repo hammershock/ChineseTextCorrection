@@ -37,11 +37,11 @@ def batchify(*sequences: Sequence[_T], max_len: int, overlap: int, pad: Union[Li
                 padded_seq = list(seq)
             padded_seqs.append(padded_seq)
 
-        pad_mask = [1] * max_len
+        attn_mask = [1] * max_len
         if len(segmented_seqs[0]) < max_len:
-            pad_mask = [0 if i >= len(segmented_seqs[0]) else 1 for i in range(max_len)]
+            attn_mask = [0 if i >= len(segmented_seqs[0]) else 1 for i in range(max_len)]
 
-        yield tuple(padded_seqs), pad_mask
+        yield tuple(padded_seqs), attn_mask
 
 
 def load_yaml(path):
@@ -57,6 +57,12 @@ def load_json(path):
 def load_txt(path):
     with open(path, 'r') as f:
         return f.readlines()
+
+
+def pad_to(src, max_len, pad):
+    attn_mask = ([1] * len(src) + [0] * (max_len - len(src)))[:max_len]
+    padded_src = (src + [pad] * (max_len - len(src)))[:max_len]
+    return padded_src, attn_mask
 
 
 if __name__ == '__main__':

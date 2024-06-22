@@ -30,5 +30,5 @@ for pinyin in pinyins:
 
 print(len(pinyin_vocab))
 
-with open('../pinyin_vocab.json', 'w', encoding='utf-8') as f:
+with open('../config/pinyin_vocab.json', 'w', encoding='utf-8') as f:
     json.dump(pinyin_vocab, f, ensure_ascii=False, indent=4)
